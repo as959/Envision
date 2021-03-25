@@ -129,3 +129,5 @@ if __name__ == '__main__':
 		webcam = args['camera']
 		video_path = args['video']
 		dectection_video_file(webcam, video_path, yolo_weights, yolo_cfg, coco_names, confidence_threshold, nms_threshold)
+
+# python obj_detection.py --camera True --weights yolov3-tiny.weights --configs yolov3-tiny.cfg --class_names coco.names
