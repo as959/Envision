@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:FlutterMobilenet/services/tensorflow-service.dart';
+import 'package:avatar_glow/avatar_glow.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -51,10 +52,18 @@ class _RecognitionState extends State<Recognition> {
 
   // tensorflow service injection
   TensorflowService _tensorflowService;
-
+  String modelpath, labelpath;
+  int choice = 0;
+  var modelpathlist = [
+    "assets/mobilenet_v1_1.0_224.tflite",
+    "assets/model_unquant.tflite"
+  ];
+  var labelpathlist = ["assets/labels.txt", "assets/currencynew.txt"];
   @override
   void initState() {
     super.initState();
+    this.modelpath = modelpathlist[choice];
+    this.labelpath = labelpathlist[choice];
     initTts();
     _tensorflowService = TensorflowService();
     // starts the streaming to tensorflow results
@@ -88,30 +97,36 @@ class _RecognitionState extends State<Recognition> {
 
   var prefix = {
     'en-IN': 'There is a ',
-    'en-US': 'That is a',
-    'hi-IN': 'आपके सामने',
-    'mr-IN': 'तुमच्य सामोर'
+    'en-US': 'That is a ',
+    'hi-IN': 'आपके सामने ',
+    'mr-IN': 'तुमच्य सामोर '
   };
   var postfix = {
-    'en-IN': 'in front ',
-    'en-US': 'in front',
-    'hi-IN': 'है',
+    'en-IN': ' in front ',
+    'en-US': ' in front',
+    'hi-IN': ' है',
     'mr-IN': 'aahe'
   };
-  Future _speak() async {
+  var sentence;
+  Future _speak(int n) async {
     await flutterTts.setVolume(volume);
     await flutterTts.setSpeechRate(rate);
     await flutterTts.setPitch(pitch);
 
-    if (_currentRecognition[0]['label'] != null) {
-      if (_currentRecognition[0]['label'].isNotEmpty) {
-        print("lanmguage$language");
-        var sentence = prefix[language] +
+    if (_currentRecognition != null || n == 1) {
+      print("________________$_currentRecognition");
+      print("language$language");
+      if (n == 0) {
+        sentence = prefix[language] +
             _currentRecognition[0]['label'] +
             postfix[language];
-        var result = await flutterTts.speak(sentence);
-        if (result == 1) setState(() => ttsState = TtsState.playing);
+      } else {
+        print("Feedback mode");
+        sentence = feedback;
       }
+      print("Playing feedbacky");
+      var result = await flutterTts.speak(sentence);
+      if (result == 1) setState(() => ttsState = TtsState.playing);
     }
   }
 
@@ -130,7 +145,7 @@ class _RecognitionState extends State<Recognition> {
           // rebuilds the screen with the new recognitions
           setState(() {
             _currentRecognition = recognition;
-            _speak();
+            _speak(0);
           });
         } else {
           _currentRecognition = [];
@@ -139,6 +154,8 @@ class _RecognitionState extends State<Recognition> {
     }
   }
 
+  String feedback = "Starting";
+
   @override
   Widget build(BuildContext context) {
     return Align(
@@ -146,11 +163,11 @@ class _RecognitionState extends State<Recognition> {
       child: Container(
         padding: EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 50),
         decoration: BoxDecoration(
-            color: Color(0xFF120320),
+            color: Colors.white,
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20.0),
                 topRight: Radius.circular(20.0))),
-        height: 250,
+        height: 300,
         width: MediaQuery.of(context).size.width,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -158,20 +175,41 @@ class _RecognitionState extends State<Recognition> {
               ? <Widget>[
                   // shows recognition title
                   Text(
-                    "Recognitions",
-                    style: TextStyle(fontSize: 30, fontWeight: FontWeight.w300),
+                    "Recognition",
+                    maxLines: 1,
+                    style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w300,
+                        color: Colors.black),
                   ),
 
                   // shows recognitions list
                   Expanded(child: _contentWidget()),
-                  IconButton(
-                      padding: EdgeInsets.all(0),
-                      icon: Icon(
-                        Icons.mic,
-                        color: Colors.white,
-                        size: 60.0,
-                      ),
-                      onPressed: null)
+                  Container(
+                    width: 100,
+                    height: 100,
+                    child: FloatingActionButton(
+                      onPressed: () {
+                        setState(() {
+                          choice = 1 - choice;
+                          modelpath = modelpathlist[choice];
+                          labelpath = labelpathlist[choice];
+                          if (choice == 1)
+                            feedback = "Currency mode activated";
+                          else
+                            feedback = " Surrounding mode activated";
+                          _speak(1);
+                          _tensorflowService.loadModel(modelpath, labelpath);
+                        });
+                      },
+                      backgroundColor: Colors.indigo[900],
+                      child: Icon(
+                          choice == 0
+                              ? Icons.all_inbox
+                              : Icons.attach_money_rounded,
+                          size: 45),
+                    ),
+                  ),
                 ]
               : <Widget>[],
         ),
@@ -203,12 +241,13 @@ class _RecognitionState extends State<Recognition> {
                         _currentRecognition[index]['label'],
                         maxLines: 1,
                         overflow: TextOverflow.clip,
+                        style: TextStyle(color: Colors.black),
                       ),
                     ),
                     Container(
                       width: _barWitdth,
                       child: LinearProgressIndicator(
-                        backgroundColor: Color.fromRGBO(255, 255, 255, 0.4),
+                        backgroundColor: Color.fromRGBO(0, 0, 0, 0.4),
                         value: _currentRecognition[index]['confidence'],
                       ),
                     ),
@@ -221,6 +260,7 @@ class _RecognitionState extends State<Recognition> {
                             ' %',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.black),
                       ),
                     )
                   ],

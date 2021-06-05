@@ -21,12 +21,12 @@ class TensorflowService {
 
   bool _modelLoaded = false;
 
-  Future<void> loadModel() async {
+  Future<void> loadModel(mpath, lpath) async {
     try {
       this._recognitionController.add(null);
       await Tflite.loadModel(
-        model: "assets/mobilenet_v1_1.0_224.tflite",
-        labels: "assets/labels.txt",
+        model: mpath,
+        labels: lpath,
       );
       _modelLoaded = true;
     } catch (e) {

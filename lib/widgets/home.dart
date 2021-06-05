@@ -42,14 +42,18 @@ class HomeState extends State<Home>
     if (!mounted) {
       return;
     }
+    print("Value of__________$_initializeControllerFuture");
     if (_initializeControllerFuture == null) {
       _initializeControllerFuture =
           _cameraService.startService(widget.camera).then((value) async {
-        await _tensorflowService.loadModel();
+        await _tensorflowService.loadModel(
+            "assets/mobilenet_v1_1.0_224.tflite", "assets/labels.txt");
+        print("Starting recognitios");
         startRecognitions();
       });
     } else {
-      await _tensorflowService.loadModel();
+      await _tensorflowService.loadModel(
+          "assets/mobilenet_v1_1.0_224.tflite", "assets/labels.txt");
       startRecognitions();
     }
   }
