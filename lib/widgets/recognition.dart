@@ -55,7 +55,7 @@ class _RecognitionState extends State<Recognition> {
   String modelpath, labelpath;
   int choice = 0;
   var modelpathlist = [
-    "assets/mobilenet_v1_1.0_224.tflite",
+    "assets/object_unquant.tflite",
     "assets/model_unquant.tflite"
   ];
   var labelpathlist = ["assets/labels.txt", "assets/currencynew.txt"];
