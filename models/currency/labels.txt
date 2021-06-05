@@ -1,0 +1,6 @@
+fifty
+fivehundred
+hundred
+ten
+thousand
+twenty
